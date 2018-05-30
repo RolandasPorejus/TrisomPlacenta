@@ -1,0 +1,59 @@
+---
+title: "TrisomPlacentos"
+author: "Rolandas Porejus"
+date: "May 30, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+source("http://bioconductor.org/biocLite.R")
+biocLite("GEOquery")
+
+#Load libraries
+library(Biobase)
+library(GEOquery)
+
+#Load data from GEO
+
+gset <- getGEO("GSE66210", GSEMatrix =TRUE, getGPL=FALSE)
+GPLset <- getGEO("GPL13534", getGPL=TRUE)
+```
+
+Surušiuojame duomenis ir sukuriame hiper/hipo metilinimo matricą.
+```{r}
+MBC <- subset(gset@phenoData@data, `tissue:ch1` == "maternal whole blood")
+CVS <- subset(gset@phenoData@data, `tissue:ch1` == 'chorionic villus')
+
+CVSnorm <- subset(gset@phenoData@data, `pregnancy:ch1` == 'normal pregnancy')
+CVS_T21 <- subset(gset@phenoData@data, `pregnancy:ch1` == 'trisomy 21')
+CVS_T13 <- subset(gset@phenoData@data, `pregnancy:ch1` == 'trisomy 13')
+CVS_T18 <- subset(gset@phenoData@data, `pregnancy:ch1` == 'trisomy 18')
+
+HypomethylMBC <- gset@assayData$exprs[,MBC$geo_accession] < 0.2
+HypermethylMBC <- gset@assayData$exprs[,MBC$geo_accession] > 0.8
+HypomethylCVSnorm <- gset@assayData$exprs[,CVSnorm$geo_accession] < 0.2
+HypermethylCVSnorm <- gset@assayData$exprs[,CVSnorm$geo_accession] > 0.8
+HypomethylCVS_T21 <- gset@assayData$exprs[,CVS_T21$geo_accession] < 0.2
+HypermethylCVS_T21 <- gset@assayData$exprs[,CVS_T21$geo_accession] > 0.8
+HypomethylCVS_T13 <- gset@assayData$exprs[,CVS_T13$geo_accession] < 0.2
+HypermethylCVS_T13 <- gset@assayData$exprs[,CVS_T13$geo_accession] > 0.8
+HypomethylCVS_T18 <- gset@assayData$exprs[,CVS_T18$geo_accession] < 0.2
+HypermethylCVS_T18 <- gset@assayData$exprs[,CVS_T18$geo_accession] > 0.8
+
+sum(HypomethylMBC, na.rm=TRUE)
+sum(HypermethylMBC, na.rm=TRUE)
+
+sum(HypomethylCVS_T18, na.rm=TRUE)
+sum(HypermethylCVS_T18, na.rm=TRUE)
+
+```
+
+
+```{r}
+GPLexp <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "Island")
+```
