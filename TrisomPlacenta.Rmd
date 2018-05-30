@@ -23,35 +23,88 @@ library(GEOquery)
 gset <- getGEO("GSE66210", GSEMatrix =TRUE, getGPL=FALSE)
 GPLset <- getGEO("GPL13534", getGPL=TRUE)
 ```
-
-Surušiuojame duomenis ir sukuriame hiper/hipo metilinimo matricą.
 ```{r}
-MBC <- subset(gset@phenoData@data, `tissue:ch1` == "maternal whole blood")
-CVS <- subset(gset@phenoData@data, `tissue:ch1` == 'chorionic villus')
+assaydata = exprs(gset[[1]])
+if (length(gset) > 1) idx <- grep("GPL13534", attr(gset, "names")) else idx <- 1
+gset <- gset[[idx]]
+```
 
-CVSnorm <- subset(gset@phenoData@data, `pregnancy:ch1` == 'normal pregnancy')
-CVS_T21 <- subset(gset@phenoData@data, `pregnancy:ch1` == 'trisomy 21')
-CVS_T13 <- subset(gset@phenoData@data, `pregnancy:ch1` == 'trisomy 13')
-CVS_T18 <- subset(gset@phenoData@data, `pregnancy:ch1` == 'trisomy 18')
+Surušiuojame duomenis ir sukuriame hyper/hipo metilinimo matricas.
+```{r}
+MBC <- gset[, gset$`tissue:ch1` == "maternal whole blood"]
+CVS <- gset[, gset$`tissue:ch1` == "chorionic villus"]
 
-HypomethylMBC <- gset@assayData$exprs[,MBC$geo_accession] < 0.2
-HypermethylMBC <- gset@assayData$exprs[,MBC$geo_accession] > 0.8
-HypomethylCVSnorm <- gset@assayData$exprs[,CVSnorm$geo_accession] < 0.2
-HypermethylCVSnorm <- gset@assayData$exprs[,CVSnorm$geo_accession] > 0.8
-HypomethylCVS_T21 <- gset@assayData$exprs[,CVS_T21$geo_accession] < 0.2
-HypermethylCVS_T21 <- gset@assayData$exprs[,CVS_T21$geo_accession] > 0.8
-HypomethylCVS_T13 <- gset@assayData$exprs[,CVS_T13$geo_accession] < 0.2
-HypermethylCVS_T13 <- gset@assayData$exprs[,CVS_T13$geo_accession] > 0.8
-HypomethylCVS_T18 <- gset@assayData$exprs[,CVS_T18$geo_accession] < 0.2
-HypermethylCVS_T18 <- gset@assayData$exprs[,CVS_T18$geo_accession] > 0.8
-
-sum(HypomethylMBC, na.rm=TRUE)
-sum(HypermethylMBC, na.rm=TRUE)
-sum(HypomethylCVS_T18, na.rm=TRUE)
-sum(HypermethylCVS_T18, na.rm=TRUE)
+CVSnorm <- subset(CVS@phenoData@data, `pregnancy:ch1` == 'normal pregnancy')
+CVS_T21 <- subset(CVS@phenoData@data, `pregnancy:ch1` == 'trisomy 21')
+CVS_T13 <- subset(CVS@phenoData@data, `pregnancy:ch1` == 'trisomy 13')
+CVS_T18 <- subset(CVS@phenoData@data, `pregnancy:ch1` == 'trisomy 18')
 
 ```
 
+Skaičiuojame kiek iš viso yra metilinimo saitų apibrėžtose grupėse.
+```{r}
+library(scales)
+methyl_vec <- numeric()
+
+means <- rowMeans(MBC@assayData$exprs[,MBC$geo_accession])
+means1 <- subset(means, means<0.2)
+HypomethylMBC_Num <- NROW(means1)
+methyl_vec <- append(methyl_vec, HypomethylMBC_Num)
+methyl_vec <- append(methyl_vec, percent(HypomethylMBC_Num/NROW(means)))
+means2 <- subset(means, means>0.8)
+HypermethylMBC_Num <- NROW(means2)
+methyl_vec <- append(methyl_vec, HypermethylMBC_Num)
+methyl_vec <- append(methyl_vec, percent(HypermethylMBC_Num/NROW(means)))
+
+means <- rowMeans(CVS@assayData$exprs[,CVSnorm$geo_accession])
+means1 <- subset(means, means<0.2)
+HypomethylCVSnorm_Num <- NROW(means1)
+methyl_vec <- append(methyl_vec, HypomethylCVSnorm_Num)
+methyl_vec <- append(methyl_vec, percent(HypomethylCVSnorm_Num/NROW(means)))
+means2 <- subset(means, means>0.8)
+HypermethylCVSnorm_Num <- NROW(means2)
+methyl_vec <- append(methyl_vec, HypermethylCVSnorm_Num)
+methyl_vec <- append(methyl_vec, percent(HypermethylCVSnorm_Num/NROW(means)))
+
+means <- rowMeans(CVS@assayData$exprs[,CVS_T21$geo_accession])
+means1 <- subset(means, means<0.2)
+HypomethylCVS_T21_Num <- NROW(means1)
+methyl_vec <- append(methyl_vec, HypomethylCVS_T21_Num)
+methyl_vec <- append(methyl_vec, percent(HypomethylCVS_T21_Num/NROW(means)))
+means2 <- subset(means, means>0.8)
+HypermethylCVS_T21_Num <- NROW(means2)
+methyl_vec <- append(methyl_vec, HypermethylCVS_T21_Num)
+methyl_vec <- append(methyl_vec, percent(HypermethylCVS_T21_Num/NROW(means)))
+
+means <- rowMeans(CVS@assayData$exprs[,CVS_T13$geo_accession])
+means1 <- subset(means, means<0.2)
+HypomethylCVS_T13_Num <- NROW(means1)
+methyl_vec <- append(methyl_vec, HypomethylCVS_T13_Num)
+methyl_vec <- append(methyl_vec, percent(HypomethylCVS_T13_Num/NROW(means)))
+means2 <- subset(means, means>0.8)
+HypermethylCVS_T13_Num <- NROW(means2)
+methyl_vec <- append(methyl_vec, HypermethylCVS_T13_Num)
+methyl_vec <- append(methyl_vec, percent(HypermethylCVS_T13_Num/NROW(means)))
+
+means <- rowMeans(CVS@assayData$exprs[,CVS_T18$geo_accession])
+means1 <- subset(means, means<0.2)
+HypomethylCVS_T18_Num <- NROW(means1)
+methyl_vec <- append(methyl_vec, HypomethylCVS_T18_Num)
+methyl_vec <- append(methyl_vec, percent(HypomethylCVS_T18_Num/NROW(means)))
+means2 <- subset(means, means>0.8)
+HypermethylCVS_T18_Num <- NROW(means2)
+methyl_vec <- append(methyl_vec, HypermethylCVS_T18_Num)
+methyl_vec <- append(methyl_vec, percent(HypermethylCVS_T18_Num/NROW(means)))
+
+```
+Sukuriame lentelę
+```{r}
+methylation <- matrix(methyl_vec,ncol=4,byrow=TRUE)
+colnames(methylation) <- c("Number of sites (β<0.2)","Percent (β<0.2)","Number of sites (β>0.8)","Percent (β>0.8)")
+rownames(methylation) <- c("MBC","CVSnorm","CVS T21","CVS T13","CVS T18")
+methylation <- as.table(methylatione)
+methylation
+```
 
 ```{r}
 Islands <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "Island")
