@@ -24,15 +24,15 @@ gset <- getGEO("GSE66210", GSEMatrix =TRUE, getGPL=FALSE)
 GPLset <- getGEO("GPL13534", getGPL=TRUE)
 ```
 ```{r}
-assaydata = exprs(gset[[1]])
 if (length(gset) > 1) idx <- grep("GPL13534", attr(gset, "names")) else idx <- 1
-gset <- gset[[idx]]
+gset2 <- na.omit(gset[[idx]])
+assaydata = exprs(gset2)
 ```
 
 Surušiuojame duomenis ir sukuriame hyper/hipo metilinimo matricas.
 ```{r}
-MBC <- gset[, gset$`tissue:ch1` == "maternal whole blood"]
-CVS <- gset[, gset$`tissue:ch1` == "chorionic villus"]
+MBC <- gset2[, gset2$`tissue:ch1` == "maternal whole blood"]
+CVS <- gset2[, gset2$`tissue:ch1` == "chorionic villus"]
 
 CVSnorm <- subset(CVS@phenoData@data, `pregnancy:ch1` == 'normal pregnancy')
 CVS_T21 <- subset(CVS@phenoData@data, `pregnancy:ch1` == 'trisomy 21')
@@ -102,13 +102,56 @@ Sukuriame lentelę
 methylation <- matrix(methyl_vec,ncol=4,byrow=TRUE)
 colnames(methylation) <- c("Number of sites (β<0.2)","Percent (β<0.2)","Number of sites (β>0.8)","Percent (β>0.8)")
 rownames(methylation) <- c("MBC","CVSnorm","CVS T21","CVS T13","CVS T18")
-methylation <- as.table(methylatione)
+methylation <- as.table(methylation)
 methylation
 ```
 
+Rušiuojame pagal CpG tipus
 ```{r}
 Islands <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "Island")
 Shores <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "S_Shore" | Relation_to_UCSC_CpG_Island == "N_Shore")
 Shelfs <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "S_Shelf" | Relation_to_UCSC_CpG_Island == "N_Shelf")
 Open_sea <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "")
 ```
+
+Tikimybiu tankumo grafikai
+Raudona - motinos kraujas (sveikas) 
+Mėlyna - sveikos placentos
+Juoda - T13 plaentos
+Pilka - T18 placentos
+Žalia - T21 placentos
+```{r}
+d <- density(na.omit(c(MBC@assayData$exprs)))
+plot(d, main=paste("All (",NROW(MBC@assayData$exprs),")"),xlab="β-value", col="red")
+par(new=T)
+d <- density(na.omit(c(CVS@assayData$exprs[,CVSnorm$geo_accession])))
+plot(d, main ="", col="blue",xlab="",ylab="", xlim=c(0,1))
+par(new=T)
+d <- density(na.omit(c(CVS@assayData$exprs[,CVS_T13$geo_accession])))
+plot(d, main ="", col="black",xlab="",ylab="", xlim=c(0,1))
+par(new=T)
+d <- density(na.omit(c(CVS@assayData$exprs[,CVS_T18$geo_accession])))
+plot(d, main ="", col="grey",xlab="",ylab="", xlim=c(0,1))
+par(new=T)
+d <- density(na.omit(c(CVS@assayData$exprs[,CVS_T21$geo_accession])))
+plot(d, main ="", col="green",xlab="",ylab="", xlim=c(0,1))
+par(new=F)
+
+d <- density(na.omit(c(MBC@assayData$exprs[Islands$Name,])))
+plot(d, main=paste("Islands (",NROW(MBC@assayData$exprs[Islands$Name,]),")"),xlab="β-value", col="red")
+par(new=T)
+d <- density(na.omit(c(CVS@assayData$exprs[Islands$Name,CVSnorm$geo_accession])))
+plot(d, main ="", col="blue",xlab="",ylab="")
+par(new=T)
+d <- density(na.omit(c(CVS@assayData$exprs[Islands$Name,CVS_T13$geo_accession])))
+plot(d, main ="", col="black",xlab="",ylab="")
+par(new=T)
+d <- density(na.omit(c(CVS@assayData$exprs[Islands$Name,CVS_T18$geo_accession])))
+plot(d, main ="", col="grey",xlab="",ylab="")
+par(new=T)
+d <- density(na.omit(c(CVS@assayData$exprs[Islands$Name,CVS_T21$geo_accession])))
+plot(d, main ="", col="green",xlab="",ylab="")
+par(new=F)
+
+```
+
