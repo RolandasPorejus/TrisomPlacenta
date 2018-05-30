@@ -47,7 +47,6 @@ HypermethylCVS_T18 <- gset@assayData$exprs[,CVS_T18$geo_accession] > 0.8
 
 sum(HypomethylMBC, na.rm=TRUE)
 sum(HypermethylMBC, na.rm=TRUE)
-
 sum(HypomethylCVS_T18, na.rm=TRUE)
 sum(HypermethylCVS_T18, na.rm=TRUE)
 
@@ -55,5 +54,8 @@ sum(HypermethylCVS_T18, na.rm=TRUE)
 
 
 ```{r}
-GPLexp <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "Island")
+Islands <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "Island")
+Shores <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "S_Shore" | Relation_to_UCSC_CpG_Island == "N_Shore")
+Shelfs <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "S_Shelf" | Relation_to_UCSC_CpG_Island == "N_Shelf")
+Open_sea <- subset(GPLset@dataTable@table, Relation_to_UCSC_CpG_Island == "")
 ```
